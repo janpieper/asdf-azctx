@@ -1,5 +1,5 @@
 language: c
-script: asdf plugin-test azctx https://github.com/janpieper/asdf-azctx.git --asdf-plugin-gitref=main
+script: asdf plugin-test azctx https://github.com/janpieper/asdf-azctx.git --asdf-plugin-gitref=main --asdf-tool-version v0.2
 before_script:
   - git clone https://github.com/asdf-vm/asdf.git
   - . asdf/asdf.sh
