@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+set -e
+set -o pipefail
+
+ASDF_INSTALL_TYPE=${ASDF_INSTALL_TYPE:-version}
+[ -n "$ASDF_INSTALL_VERSION" ] || (>&2 echo 'Missing ASDF_INSTALL_VERSION' && exit 1)
+[ -n "$ASDF_INSTALL_PATH" ] || (>&2 echo 'Missing ASDF_INSTALL_PATH' && exit 1)
+
+install_azctx() {
+  local install_type=$1
+  local version=$2
+  local version_without_prefix=$(echo $version | sed 's/^v//')
+  local install_path=$3
+
+  if [ "$TMPDIR" = "" ]; then
+    local tmp_download_dir=$(mktemp -d -t azctx_XXXXXX)
+  else
+    local tmp_download_dir=${TMPDIR%/}
+  fi
+
+  local tarball_path="$tmp_download_dir/azctx-$version.tar.gz"
+
+  download_source $version $tarball_path
+
+  # Running this in a subshell because we don't to disturb the current
+  # working directory.
+  (
+    cd $tmp_download_dir
+    tar zxvf "azctx-$version.tar.gz" &> /dev/null
+    mkdir -p $install_path/bin/
+
+    if [ -d "azctx-$version_without_prefix" ]; then
+      # e.g. "azctx-0.2/azctx"
+      cp "azctx-$version_without_prefix/azctx" $install_path/bin/
+    else
+      # e.g. "azctx-v0.2/azctx"
+      cp "azctx-$version/azctx" $install_path/bin/
+    fi
+  )
+}
+
+download_source() {
+  local version=$1
+  local download_path=$2
+
+  curl -Lo $download_path "https://codeload.github.com/StiviiK/azctx/tar.gz/$version"
+}
+
+install_azctx "$ASDF_INSTALL_TYPE" "$ASDF_INSTALL_VERSION" "$ASDF_INSTALL_PATH"
